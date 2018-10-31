@@ -1,1 +1,1 @@
-在根目录 敲命令 node web.js  即可运行！
+在根目录 敲命令 node web.js  即可运行  ！
