@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+   <meta charset="utf-8">
+   <title>socket</title>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+   <script src="http://libs.baidu.com/jquery/1.7.0/jquery.min.js"></script>
+
+      <script type="text/javascript">
+
+         // socket.io引入成功后，可通过io()生成客户端所需的socket对象。
+var socket = io('http://localhost:8889');
+// console.log(socket);
+socket.on('connect', function() {
+    // 监听服务端消息
+    socket.on('news', function (data) {
+    console.log(data);
+    // socket.emit('my other event', { usersay: '你好我是' });
+  });
+
+    // 监听服务端关闭
+    socket.on('disconnect', function() { 
+        console.log('Server socket has closed.'); 
+    });
+});
+
+
+
+
+function WebSocketTest() {
+   var txt = $('input[name=say]').val();
+   socket.emit('my other event', { usersay: txt });
+}
+      </script>
+        
+   </head>
+   <body>
+      <input type="text" name="say">
+      <div id="sse">
+         <a href="javascript:WebSocketTest()">发送</a>
+      </div>
+      
+   </body>
+</html>

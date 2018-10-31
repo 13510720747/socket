@@ -1,0 +1,369 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+ <meta charset="utf-8">
+ <title>♂欢迎♂欢迎♂来到多人聊天室</title>
+ <script src="socket.io.min.js"></script>
+ <script src="vue.js"></script>
+
+
+</head>
+<body>
+  <div id="web">
+    <div class="mainTalk" >
+      <ul class="talkList" v-if="jlShow">
+        <li v-for="(item , index) of listRe" v-bind:class="{ isAdmin: item.isAdmin,right:item.ziji,ed: lireed == index }" @contextmenu.prevent="deLi(listRe,index)" >
+          <img :src="item.tx">
+          <p class="p1">{{item.name}}</p>
+          <p>{{item.content}}</p>
+        </li>
+        <li class="lastLi" >上面是聊天记录</li>
+      </ul>
+      <ul class="talkList">
+        <li v-for="(item , index) of list" v-bind:class="{ isAdmin: item.isAdmin,right:item.ziji ,ed: lied == index }" @contextmenu.prevent="deLi(list,index)" >
+          <img :src="item.tx">
+          <p class="p1">{{item.name}}</p>
+          <p>{{item.content}}</p>
+        </li>
+      </ul>
+    </div>
+    <div class="userBox">
+      姓名：<input type="text" name="name" v-model="user" :disabled="read==true">
+      
+      <button class="txBtn" @click="showPop">头像选择</button>
+
+      
+      <div class="pop" v-if="pop ==true">
+        <ul>
+          <li v-for="(item ,index) of txList" @click="hidePop(item.tx,index)">
+            <img :src="item.tx"  v-bind:class="{ ed: imged == index }">
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="sendBox">
+      <input type="text" name="say" v-model="inTxt" placeholder="请输入你想说的话。。。">
+      <a @click="WebSocketTest(user)">{{a}}</a>
+    </div>
+    <div class="clearBtn" @click="deAll">清除所有聊天数据</div>
+    <p class="psTxt">右键某条信息可删除该条信息!</p>
+  </div> 
+</body>
+</html>
+
+<script type="text/javascript">
+  var socket = io('http://localhost:8889');
+  socket.on('connect', function() {
+    socket.on('news', function (data) {
+      vm.list.push(data);
+    });
+    socket.on('disconnect', function() { 
+      console.log('Server socket has closed.'); 
+    });
+  });
+
+
+
+
+  var vm = new Vue({
+    el: '#web',
+    data: {
+      a:'发送',
+      inTxt:'',
+      user:'',
+      read:false,
+      pop:false,
+      imged:0,
+      lied:-1,
+      lireed:-1,
+      isAdmin:false,
+      jlShow:false,
+      tx:'http://bpic.588ku.com/element_origin_min_pic/18/06/10/7ac42bffbce03b2d236b66428e756dbe.jpg',
+      txList:[
+      {
+        tx:'http://bpic.588ku.com/element_origin_min_pic/18/06/10/7ac42bffbce03b2d236b66428e756dbe.jpg'
+      },
+      {
+        tx:'http://bpic.588ku.com/element_origin_min_pic/18/06/10/e44dfe38852ceb596f2c1ff328d53e83.jpg'
+      },
+      {
+        tx:'http://bpic.588ku.com/element_origin_min_pic/18/06/10/cea95baf7f982e5eff6abdac53eef0bc.jpg'
+      },
+      {
+        tx:'http://bpic.588ku.com/element_origin_min_pic/18/06/10/ceee41952ed8a158ba00a7700d818a83.jpg'
+      }
+      ],
+      list:[
+      {
+        name:'多人聊天室',
+        content:'你好，♂欢迎♂欢迎♂来到多人聊天室！',
+        tx:'https://ss0.baidu.com/6ONWsjip0QIZ8tyhnq/it/u=3643687533,272026720&fm=58',
+        isAdmin:true,
+        ziji:false
+      }
+      ],
+      listRe:[]
+    },
+    methods: {
+      deAll () {
+        var that = this;
+        that.list = [];
+        that.listRe = [];
+        localStorage.removeItem('talkList');
+        that.jlShow = false;
+      },
+      WebSocketTest (name) {
+        var that = this;
+        that.read = true;
+        if (that.user =='') {
+          that.user ='匿名用户';
+          name = '匿名用户';
+        }
+        socket.emit('my other event', { content: that.inTxt,name:name,tx:that.tx,isAdmin:that.isAdmin });
+        var data = {
+          content: that.inTxt,
+          name:name,
+          tx:that.tx,
+          isAdmin:that.isAdmin,
+          ziji:true
+        }
+        that.list.push(data)
+        
+        if (localStorage.getItem('talkList')) {
+          var txt = JSON.parse(localStorage.getItem('talkList'));
+
+          txt.push(data)
+          localStorage.setItem("talkList",JSON.stringify(txt));
+        }else{
+          localStorage.setItem("talkList",JSON.stringify([data]));
+        }
+
+
+
+        that.inTxt = '';
+        setTimeout(function() {
+          document.getElementsByClassName('mainTalk')[0].scrollTop=9999;
+        }, 10);
+        
+      },
+      showPop () {
+        var that = this;
+        that.pop = true;
+      },
+      hidePop (url,i) {
+        var that = this;
+
+        that.imged = i;
+        setTimeout(function() {
+          that.pop = false;
+        }, 300);
+        that.tx = url;
+      },
+      getQueryVariable (variable){
+       var query = window.location.search.substring(1);
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+        var pair = vars[i].split("=");
+        if(pair[0] == variable){return pair[1];}
+      }
+      return(false);
+    },
+    deLi (n,i) {
+      var that = this;
+      if (n[0].tx.indexOf('baidu') !== -1) {
+        that.lied = i;
+      }else{
+        that.lireed = i;
+      }
+      setTimeout(function() {
+        var r=confirm("是否确认删除该信息!")
+        if (r==true){
+          var txt;
+          if (localStorage.getItem('talkList')) {
+            txt = JSON.parse(localStorage.getItem('talkList'));
+            txt.forEach(function(nn,ii){
+              if (n[i].content ==nn.content) {
+                txt.splice(ii,1);
+              }
+            })
+          }
+          
+          if (n[0].tx.indexOf('baidu') !== -1) {
+            that.list.splice(i,1);
+          }else{
+            that.listRe.splice(i,1);
+            if (that.listRe.length == 0) {
+              that.jlShow = false;
+            }
+          }
+          that.lied = -1;
+          that.lireed = -1;
+          if (txt.length==0) {
+            localStorage.removeItem("talkList");
+          }else{
+            localStorage.setItem("talkList",JSON.stringify(txt));
+          }
+
+        }else{
+          that.lied = -1;
+          that.lireed = -1;
+        }
+      }, 20);
+      
+    }
+  },
+  mounted: function() {
+    var that = this;
+    this.$nextTick(function () {
+
+      if (that.getQueryVariable('admin')) {
+        that.user = '管理员';
+        that.read = true;
+        that.isAdmin =true;
+      }
+      if (localStorage.getItem('talkList')) {
+        that.jlShow = true;
+        var txt = JSON.parse(localStorage.getItem('talkList'));
+        
+        txt.forEach(function(n,i){
+          if (n.tx.indexOf('baidu') !== -1) {
+            return;
+          }
+          // console.log(n);
+          n.ziji =false;
+          that.listRe.push(n);
+        })
+        
+      }
+      
+    })
+  }
+})
+</script>
+<style type="text/css">
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing:border-box;
+}
+#web{padding: 10px}
+li,ul{list-style: none;}
+.talkList li{
+  text-align: left;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.talkList li.ed{
+  background: pink;
+}
+.talkList li .p1{
+  color: blue;
+}
+.talkList li img{
+  float: left;
+  width: 50px;
+  height: 50px;
+  padding-right: 10px;
+}
+.talkList li.isAdmin .p1{
+  color: red;
+}
+.talkList li.right img{
+  float: right;
+  width: 50px;
+  height: 50px;
+  padding-left: 10px;
+
+}
+
+.talkList li.right{
+  text-align: right;
+
+}
+.talkList{
+  width: 500px;
+  overflow: hidden;
+  background: #f1f1f1;
+  padding: 10px;
+  height:auto;
+  overflow-y: auto;
+}
+.txBtn{
+
+}
+.userBox{
+  min-height: 40px;
+  line-height: 40px;
+}
+.userBox input{
+  width: 150px;
+}
+.sendBox{
+  overflow: hidden;
+}
+.sendBox input{
+  width: 450px;
+  float: left;
+  height: 30px;
+  line-height: 30px;
+  border:0;
+  background: #f1f1f1;
+  text-indent: 10px;
+}
+.sendBox a{
+  border: 0;
+  background: lightblue;
+  width: 50px;
+  display: block;
+  float: left;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  cursor: pointer;
+}
+.pop{
+  width: 500px;
+  margin: 10px 0;
+  overflow: hidden;
+
+}
+.pop li{
+  float: left;
+  margin-left: 10px;
+}
+.pop li img{
+  width: 100px;
+  height: 80px;
+}
+.pop li img.ed{
+  border:1px solid red;
+}
+.clearBtn{
+  padding:3px 10px;
+  background: #e2526b;
+  color: #fff;
+  float: left;
+  display: inline;
+  margin: 10px 0;
+  cursor: pointer;
+}
+.mainTalk{
+  max-height: 500px;
+  overflow-y: auto;
+  min-height: 500px;
+  background: #f1f1f1;
+  width: 500px;
+}
+.psTxt{
+  color: #010101;
+  line-height: 56px;
+  text-indent: 10px;
+  font-size: 13px;
+}
+.lastLi{
+  color: rgb(170, 170, 170);
+  text-align: center !important;
+  border-bottom: 1px dotted;
+  padding-bottom: 10px;
+}
+</style>
